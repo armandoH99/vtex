@@ -12,3 +12,6 @@ data/catalog.db
 
 # Assessment PDFs are confidential — do not publish
 *.pdf
+
+# Personal interview prep (keep local; do not publish)
+docs/

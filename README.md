@@ -195,31 +195,12 @@ sqlite3 data/catalog.db "SELECT p.Name, sp.SellerName FROM SellerProduct sp JOIN
 | Scale | Single SQLite file + CLI | Streaming ingest, batch jobs, Postgres |
 | Identity | Name + Brand | External GTINs/EANs when available |
 
-## Interview notes (sync phase)
-
-### Hypotheses I would verbalize
+## Design hypotheses (for discussion)
 
 - Seller `Id` is their SKU, not the marketplace product id
-- Marketplace identity ≈ “same commercial product”, approximated by name + brand
-- Category drift is noise for identity
-- Schema bug (`INTEGER` vs UUID) is intentional, not something to ignore
-
-### How AI was used
-
-AI is allowed and encouraged. In this repo it helped scaffold structure, tests, and docs. Critical validation was done against the **real DB + JSON** (schema inspection, overlap analysis, edge cases like accents/quotes/SQL-looking brands). Be ready to explain every decision above without the assistant.
-
-### Tips from the guideline doc
-
-- Justify decisions and trade-offs
-- Assume hypotheses out loud; ask to validate requirements
-- Show awareness of limitations and how you’d evolve the design
-- Live coding may extend this solution — keep the code easy to navigate
-
-## Submission
-
-1. Push this project to a **public** GitHub/GitLab repository
-2. Reply to the assessment email with the repository URL
-3. Deadline: **48 hours** from receipt of the challenge email
+- Marketplace identity ≈ “same commercial product”, approximated by normalized name + brand
+- Category drift is noise for identity (e.g. Photo vs Photography)
+- Schema mismatch (`SellerProductId` INTEGER vs UUID strings) is intentional and was migrated to TEXT
 
 ## License / confidentiality
 
