@@ -10,8 +10,8 @@ data/catalog.db
 *.db-wal
 *.db-shm
 
-# Assessment PDFs are confidential — do not publish
+# Assessment PDFs are confidential
 *.pdf
 
-# Personal interview prep (keep local; do not publish)
+# Personal interview prep 
 docs/
