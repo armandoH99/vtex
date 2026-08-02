@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+data/catalog.db
+!data/catalog.db.original
+/catalog.db
+*.db-wal
+*.db-shm
+
+# Assessment PDFs are confidential — do not publish
+*.pdf

@@ -1,0 +1,28 @@
+{
+  "name": "vtex-catalog-consolidation",
+  "version": "1.0.0",
+  "description": "VTEX take-home: catalog consolidation from multi-seller product files into SQLite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "consolidate": "tsx src/index.ts",
+    "reset-db": "cp data/catalog.db.original data/catalog.db",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}
