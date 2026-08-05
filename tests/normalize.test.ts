@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { normalizeBrand, normalizeName, normalizeText } from "../src/domain/normalize.js";
+import {
+  normalizeBrand,
+  normalizeGtin,
+  normalizeName,
+  normalizeText,
+} from "../src/domain/normalize.js";
 
 describe("normalizeText", () => {
   it("trims, lowercases, and collapses whitespace", () => {
@@ -22,5 +27,17 @@ describe("normalizeText", () => {
 
   it("keeps SQL-looking brand text as plain data after normalization", () => {
     expect(normalizeBrand("TestBrand'; SELECT 1; --")).toBe("testbrand select 1");
+  });
+});
+
+describe("normalizeGtin", () => {
+  it("keeps digits only so formatting variants match", () => {
+    expect(normalizeGtin("789-1234-567890")).toBe("7891234567890");
+    expect(normalizeGtin(" 7891234567890 ")).toBe("7891234567890");
+  });
+
+  it("treats nullish values as empty", () => {
+    expect(normalizeGtin(null)).toBe("");
+    expect(normalizeGtin(undefined)).toBe("");
   });
 });

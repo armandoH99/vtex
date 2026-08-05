@@ -286,4 +286,132 @@ describe("consolidateCatalog", () => {
     expect(product.Category).toBe("Accessories");
     db.close();
   });
+
+  it("matches by GTIN even when the seller name spelling differs", () => {
+    const db = createTestDb();
+    db.prepare(
+      `INSERT INTO Product (Name, Brand, Category, GTIN) VALUES (?, ?, ?, ?)`
+    ).run("Smartphone Galaxy S23", "Samsung", "Electronics", "7891234567890");
+
+    const summary = consolidateCatalog(db, [
+      {
+        Id: "gtin-match-1",
+        SellerName: "MegaStore",
+        Name: "Galaxy S23 Smartphone",
+        Brand: "Samsung",
+        Category: "Electronics",
+        GTIN: "789-1234-567890",
+      },
+    ]);
+
+    const products = db.prepare(`SELECT COUNT(*) AS c FROM Product`).get() as {
+      c: number;
+    };
+
+    expect(summary.productsCreated).toBe(0);
+    expect(summary.productsMatched).toBe(1);
+    expect(summary.linksCreated).toBe(1);
+    expect(products.c).toBe(1);
+    db.close();
+  });
+
+  it("keeps same name+brand as distinct products when GTINs differ", () => {
+    const db = createTestDb();
+
+    const summary = consolidateCatalog(db, [
+      {
+        Id: "pack-1",
+        SellerName: "MegaStore",
+        Name: "Mineral Water 500ml",
+        Brand: "AquaCo",
+        Category: "Beverages",
+        GTIN: "1111111111111",
+      },
+      {
+        Id: "pack-2",
+        SellerName: "TechWorld",
+        Name: "Mineral Water 500ml",
+        Brand: "AquaCo",
+        Category: "Beverages",
+        GTIN: "2222222222222",
+      },
+    ]);
+
+    const products = db
+      .prepare(`SELECT Name, Brand, GTIN FROM Product ORDER BY GTIN`)
+      .all() as Array<{ Name: string; Brand: string; GTIN: string }>;
+
+    expect(summary.productsCreated).toBe(2);
+    expect(summary.productsMatched).toBe(0);
+    expect(products).toHaveLength(2);
+    expect(products.map((p) => p.GTIN)).toEqual([
+      "1111111111111",
+      "2222222222222",
+    ]);
+    db.close();
+  });
+
+  it("matches legacy name+brand rows when incoming entry adds a GTIN", () => {
+    const db = createTestDb();
+    db.prepare(
+      `INSERT INTO Product (Name, Brand, Category) VALUES (?, ?, ?)`
+    ).run("Mouse Logitech MX Master", "Logitech", "Accessories");
+
+    const summary = consolidateCatalog(db, [
+      {
+        Id: "legacy-gtin-1",
+        SellerName: "SuperMart",
+        Name: "Mouse Logitech MX Master",
+        Brand: "Logitech",
+        Category: "Accessories",
+        GTIN: "3333333333333",
+      },
+    ]);
+
+    const products = db
+      .prepare(`SELECT COUNT(*) AS c FROM Product`)
+      .get() as { c: number };
+    const product = db
+      .prepare(`SELECT GTIN FROM Product WHERE Name = ?`)
+      .get("Mouse Logitech MX Master") as { GTIN: string };
+
+    expect(summary.productsCreated).toBe(0);
+    expect(summary.productsMatched).toBe(1);
+    expect(summary.linksCreated).toBe(1);
+    expect(products.c).toBe(1);
+    expect(product.GTIN).toBe("3333333333333");
+    db.close();
+  });
+
+  it("stores GTIN on newly created products", () => {
+    const db = createTestDb();
+
+    consolidateCatalog(db, [
+      {
+        Id: "new-gtin-1",
+        SellerName: "GadgetZone",
+        Name: "Brand New Gadget",
+        Brand: "Acme",
+        Category: "Gadgets",
+        GTIN: "4444444444444",
+      },
+    ]);
+
+    const product = db
+      .prepare(`SELECT Name, GTIN FROM Product`)
+      .get() as { Name: string; GTIN: string };
+
+    expect(product.Name).toBe("Brand New Gadget");
+    expect(product.GTIN).toBe("4444444444444");
+    db.close();
+  });
+
+  it("migrates Product.GTIN column onto legacy schemas", () => {
+    const db = createTestDb();
+    const columns = db.prepare(`PRAGMA table_info('Product')`).all() as Array<{
+      name: string;
+    }>;
+    expect(columns.some((c) => c.name === "GTIN")).toBe(true);
+    db.close();
+  });
 });

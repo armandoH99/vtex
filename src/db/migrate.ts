@@ -8,6 +8,7 @@ import type Database from "better-sqlite3";
  */
 export function migrate(db: Database.Database): void {
   ensureSellerProductIdIsText(db);
+  ensureProductGtinColumn(db);
 
   db.exec(`
     CREATE UNIQUE INDEX IF NOT EXISTS ux_seller_product_seller_product
@@ -18,7 +19,27 @@ export function migrate(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS ix_product_name_brand
       ON Product (Name, Brand);
+
+    CREATE INDEX IF NOT EXISTS ix_product_name_brand_gtin
+      ON Product (Name, Brand, GTIN);
+
+    -- GTIN uniquely identifies a commercial product when present.
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_product_gtin
+      ON Product (GTIN)
+      WHERE GTIN IS NOT NULL AND GTIN != '';
   `);
+}
+
+function ensureProductGtinColumn(db: Database.Database): void {
+  const columns = db
+    .prepare(`PRAGMA table_info('Product')`)
+    .all() as Array<{ name: string }>;
+
+  if (columns.some((column) => column.name === "GTIN")) {
+    return;
+  }
+
+  db.exec(`ALTER TABLE Product ADD COLUMN GTIN TEXT`);
 }
 
 function ensureSellerProductIdIsText(db: Database.Database): void {

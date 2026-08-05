@@ -36,3 +36,15 @@ export function normalizeName(name: string | null | undefined): string {
 export function normalizeBrand(brand: string | null | undefined): string {
   return normalizeText(brand);
 }
+
+/**
+ * Normalize GTIN / EAN / UPC codes for matching.
+ * Keeps digits only so formatting differences ("789...", "789-...") collapse.
+ */
+export function normalizeGtin(value: string | null | undefined): string {
+  if (value == null) {
+    return "";
+  }
+
+  return String(value).trim().replace(/\D/g, "");
+}
